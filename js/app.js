@@ -2,8 +2,8 @@ let dailyValue = 0;
 let startDate = null;
 let expenses = [];
 
-function saveSettings(event) {
-  event.preventDefault();
+function saveSettings(e) {
+  e.preventDefault();
   dailyValue = parseFloat(document.getElementById('daily-value').value);
   startDate = document.getElementById('start-date').value;
   localStorage.setItem('dailyValue', dailyValue);
@@ -11,8 +11,8 @@ function saveSettings(event) {
   renderSummary();
 }
 
-function addExpense(event) {
-  event.preventDefault();
+function addExpense(e) {
+  e.preventDefault();
   const date = document.getElementById('expense-date').value;
   const amount = parseFloat(document.getElementById('expense-amount').value);
   const description = document.getElementById('expense-description').value;
@@ -21,7 +21,7 @@ function addExpense(event) {
   localStorage.setItem('expenses', JSON.stringify(expenses));
   renderExpenses();
   renderSummary();
-  event.target.reset();
+  e.target.reset();
 }
 
 function removeExpense(index) {
@@ -48,48 +48,62 @@ function renderExpenses() {
   });
 }
 
-function renderSummary() {
-  if (!dailyValue || !startDate) return;
-
-  const today = new Date().toISOString().split('T')[0];
-  const weekStart = getWeekStart(today);
-  const monthStart = today.slice(0, 8) + '01';
-
-  const todayExpenses = getTotalExpenses(today, today);
-  const weekExpenses = getTotalExpenses(weekStart, today);
-  const monthExpenses = getTotalExpenses(monthStart, today);
-
-  const totalWeekDays = getDaysBetween(weekStart, today) + 1;
-  const totalMonthDays = getDaysBetween(monthStart, today) + 1;
-
-  const dailyBalance = dailyValue - todayExpenses;
-  const weekBalance = dailyValue * totalWeekDays - weekExpenses;
-  const monthBalance = dailyValue * totalMonthDays - monthExpenses;
-
-  document.getElementById('daily-balance').textContent = `Saldo do dia: R$ ${dailyBalance.toFixed(2)}`;
-  document.getElementById('weekly-balance').textContent = `Saldo da semana: R$ ${weekBalance.toFixed(2)}`;
-  document.getElementById('monthly-balance').textContent = `Saldo do mês: R$ ${monthBalance.toFixed(2)}`;
+// Funções auxiliares para cálculo de datas
+function getLastDayOfMonth(dateStr) {
+  const date = new Date(dateStr);
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
-function getWeekStart(dateStr) {
+function getSundayOfWeek(dateStr) {
   const date = new Date(dateStr);
   const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(date.setDate(diff));
-  return monday.toISOString().split('T')[0];
+  const diff = 7 - day;
+  const sunday = new Date(date);
+  sunday.setDate(date.getDate() + diff);
+  return sunday.toISOString().split('T')[0];
 }
 
-function getDaysBetween(start, end) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const diffTime = endDate - startDate;
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+function getDaysInclusive(startStr, endStr) {
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  const diffTime = end - start;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return diffDays > 0 ? diffDays : 0;
 }
 
 function getTotalExpenses(start, end) {
   return expenses
     .filter(exp => exp.date >= start && exp.date <= end)
     .reduce((sum, exp) => sum + exp.amount, 0);
+}
+
+function renderSummary() {
+  if (!dailyValue || !startDate) return;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const sundayOfWeek = getSundayOfWeek(today);
+  const lastDayOfMonth = getLastDayOfMonth(today).toISOString().split('T')[0];
+
+  // Começar a contar a partir da data mais tardia entre data de início e hoje
+  const startForWeek = startDate > today ? startDate : today;
+  const startForMonth = startDate > today ? startDate : today;
+
+  const daysRemainingWeek = getDaysInclusive(startForWeek, sundayOfWeek);
+  const daysRemainingMonth = getDaysInclusive(startForMonth, lastDayOfMonth);
+
+  const weekExpenses = getTotalExpenses(startForWeek, sundayOfWeek);
+  const monthExpenses = getTotalExpenses(startForMonth, lastDayOfMonth);
+  const todayExpenses = getTotalExpenses(today, today);
+
+  document.getElementById('daily-balance').textContent =
+    `Saldo do dia: R$ ${(dailyValue - todayExpenses).toFixed(2)}`;
+
+  document.getElementById('weekly-balance').textContent =
+    `Saldo da semana: R$ ${(dailyValue * daysRemainingWeek - weekExpenses).toFixed(2)}`;
+
+  document.getElementById('monthly-balance').textContent =
+    `Saldo do mês: R$ ${(dailyValue * daysRemainingMonth - monthExpenses).toFixed(2)}`;
 }
 
 window.onload = () => {
@@ -108,10 +122,10 @@ window.onload = () => {
     expenses = JSON.parse(storedExpenses);
   }
 
-  renderExpenses();
-  renderSummary();
-
   document.getElementById('config-form').addEventListener('submit', saveSettings);
   document.getElementById('expense-form').addEventListener('submit', addExpense);
   document.getElementById('reset-button').addEventListener('click', resetAll);
+
+  renderExpenses();
+  renderSummary();
 };
