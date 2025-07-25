@@ -2,14 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sabóia - Controle Financeiro Diário</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f2f2f2;
+      margin: 0; padding: 0;
+      background: #f7f9fc;
       color: #333;
     }
     header, footer {
@@ -19,41 +18,91 @@
       padding: 1rem;
     }
     main {
-      padding: 1rem;
+      max-width: 600px;
+      margin: 1rem auto;
+      padding: 0 1rem;
     }
     section {
-      margin-bottom: 2rem;
-      background-color: white;
-      padding: 1rem;
+      background: white;
       border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 7px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+      padding: 1rem;
     }
-    h2, h3 {
+    h2 {
       margin-top: 0;
     }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.3rem;
     }
-    input, button {
+    input[type=number], input[type=text] {
+      width: 100%;
       padding: 0.5rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
       font-size: 1rem;
     }
     button {
       background-color: #007bff;
-      color: white;
       border: none;
-      cursor: pointer;
+      color: white;
+      padding: 0.6rem 1.2rem;
       border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:disabled {
+      background-color: #a0c4ff;
+      cursor: not-allowed;
     }
     ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
     li {
       padding: 0.5rem 0;
       border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li span.desc {
+      flex-grow: 1;
+    }
+    li button {
+      margin-left: 0.5rem;
+      background-color: #dc3545;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+    }
+    li button.edit {
+      background-color: #28a745;
+    }
+    .resumo {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      font-weight: 600;
+    }
+    .resumo div {
+      flex: 1;
+      background: #e9ecef;
+      padding: 0.6rem;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .form-inline {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .form-inline input {
+      flex-grow: 1;
     }
   </style>
 </head>
@@ -64,20 +113,43 @@
   </header>
 
   <main>
+    <section id="config">
+      <h2>Configuração</h2>
+      <label for="valor-diario">Saldo diário (R$):</label>
+      <input type="number" id="valor-diario" min="0" step="0.01" />
+      <button id="btn-salvar-config">Salvar</button>
+    </section>
+
     <section id="saldo">
-      <h2>Saldo do dia: <span id="saldo-dia">R$ 0,00</span></h2>
-      <h3>Saldo acumulado: <span id="saldo-acumulado">R$ 0,00</span></h3>
+      <h2>Saldo Atual</h2>
+      <p>Saldo do dia: <strong id="saldo-dia">R$ 0,00</strong></p>
+      <p>Saldo acumulado: <strong id="saldo-acumulado">R$ 0,00</strong></p>
     </section>
 
     <section id="gastos">
-      <h2>Registrar gasto</h2>
-      <form id="form-gasto">
-        <input type="text" id="descricao" placeholder="Descrição" required />
-        <input type="number" id="valor" placeholder="Valor (R$)" required step="0.01" />
-        <button type="submit">Adicionar</button>
+      <h2>Registrar Gasto</h2>
+      <form id="form-gasto" autocomplete="off">
+        <div class="form-inline">
+          <input type="text" id="descricao" placeholder="Descrição" required />
+          <input type="number" id="valor" placeholder="Valor (R$)" required min="0.01" step="0.01" />
+          <button type="submit">Adicionar</button>
+        </div>
       </form>
-
       <ul id="lista-gastos"></ul>
+    </section>
+
+    <section id="resumo">
+      <h2>Resumo</h2>
+      <div class="resumo">
+        <div>
+          <div>Semana</div>
+          <div id="resumo-semana">R$ 0,00</div>
+        </div>
+        <div>
+          <div>Mês</div>
+          <div id="resumo-mes">R$ 0,00</div>
+        </div>
+      </div>
     </section>
   </main>
 
