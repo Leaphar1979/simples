@@ -49,6 +49,8 @@ function renderExpenses() {
 }
 
 function renderSummary() {
+  if (!dailyValue || !startDate) return;
+
   const today = new Date().toISOString().split('T')[0];
   const weekStart = getWeekStart(today);
   const monthStart = today.slice(0, 8) + '01';
