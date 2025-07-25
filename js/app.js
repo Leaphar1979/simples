@@ -1,3 +1,4 @@
+// app.js
 let dailyValue = 0;
 let startDate = null;
 let expenses = [];
@@ -49,8 +50,6 @@ function renderExpenses() {
 }
 
 function renderSummary() {
-  if (!dailyValue || !startDate) return;
-
   const today = new Date().toISOString().split('T')[0];
   const weekStart = getWeekStart(today);
   const monthStart = today.slice(0, 8) + '01';
@@ -74,7 +73,7 @@ function renderSummary() {
 function getWeekStart(dateStr) {
   const date = new Date(dateStr);
   const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // segunda
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(date.setDate(diff));
   return monday.toISOString().split('T')[0];
 }
