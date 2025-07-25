@@ -17,6 +17,7 @@ function addExpense(event) {
   const date = document.getElementById('expense-date').value;
   const amount = parseFloat(document.getElementById('expense-amount').value);
   const description = document.getElementById('expense-description').value;
+  if (!date || isNaN(amount) || !description) return;
   expenses.push({ date, amount, description });
   localStorage.setItem('expenses', JSON.stringify(expenses));
   renderExpenses();
@@ -43,13 +44,15 @@ function renderExpenses() {
   list.innerHTML = '';
   expenses.forEach((exp, index) => {
     const item = document.createElement('li');
-    item.innerHTML = `${exp.date} - ${exp.description}: R$ ${exp.amount.toFixed(2)} 
+    item.innerHTML = `${exp.date} - ${exp.description}: R$ ${exp.amount.toFixed(2)} \
       <button onclick="removeExpense(${index})">X</button>`;
     list.appendChild(item);
   });
 }
 
 function renderSummary() {
+  if (!dailyValue || !startDate) return;
+
   const today = new Date().toISOString().split('T')[0];
   const weekStart = getWeekStart(today);
   const monthStart = today.slice(0, 8) + '01';
