@@ -1,4 +1,3 @@
-// app.js
 let dailyValue = 0;
 let startDate = null;
 let expenses = [];
@@ -44,8 +43,7 @@ function renderExpenses() {
   list.innerHTML = '';
   expenses.forEach((exp, index) => {
     const item = document.createElement('li');
-    item.innerHTML = `${exp.date} - ${exp.description}: R$ ${exp.amount.toFixed(2)} \
-      <button onclick="removeExpense(${index})">X</button>`;
+    item.innerHTML = `${exp.date} - ${exp.description}: R$ ${exp.amount.toFixed(2)} <button onclick="removeExpense(${index})">X</button>`;
     list.appendChild(item);
   });
 }
@@ -112,4 +110,8 @@ window.onload = () => {
 
   renderExpenses();
   renderSummary();
+
+  document.getElementById('config-form').addEventListener('submit', saveSettings);
+  document.getElementById('expense-form').addEventListener('submit', addExpense);
+  document.getElementById('reset-button').addEventListener('click', resetAll);
 };
