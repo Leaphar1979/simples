@@ -48,36 +48,32 @@ function renderExpenses() {
   });
 }
 
-// Funções auxiliares para cálculo de datas
-function getLastDayOfMonth(dateStr) {
+function getMondayOfWeek(dateStr) {
   const date = new Date(dateStr);
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  return date.toISOString().split('T')[0];
 }
 
 function getSundayOfWeek(dateStr) {
   const date = new Date(dateStr);
   const day = date.getDay();
   const diff = 7 - day;
-  const sunday = new Date(date);
-  sunday.setDate(date.getDate() + diff);
-  return sunday.toISOString().split('T')[0];
+  date.setDate(date.getDate() + diff);
+  return date.toISOString().split('T')[0];
 }
 
-function getMondayOfWeek(dateStr) {
+function getLastDayOfMonth(dateStr) {
   const date = new Date(dateStr);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // domingo = 0, volta 6 dias; outros, volta para segunda
-  const monday = new Date(date);
-  monday.setDate(date.getDate() + diff);
-  return monday.toISOString().split('T')[0];
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
 function getDaysInclusive(startStr, endStr) {
   const start = new Date(startStr);
   const end = new Date(endStr);
   const diffTime = end - start;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays > 0 ? diffDays : 0;
+  return diffTime >= 0 ? Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
 }
 
 function getTotalExpenses(start, end) {
@@ -90,30 +86,37 @@ function renderSummary() {
   if (!dailyValue || !startDate) return;
 
   const today = new Date().toISOString().split('T')[0];
-
   const mondayOfWeek = getMondayOfWeek(today);
   const sundayOfWeek = getSundayOfWeek(today);
   const lastDayOfMonth = getLastDayOfMonth(today).toISOString().split('T')[0];
 
-  // Para semana: começa na segunda ou data de início, o que for maior
-  const startForWeek = startDate < mondayOfWeek ? mondayOfWeek : startDate;
+  let startForWeek;
+  if (startDate > sundayOfWeek) {
+    startForWeek = null; // data de início depois do domingo → 0 dias
+  } else if (startDate < mondayOfWeek) {
+    startForWeek = today; // data de início antes da semana → começa de hoje
+  } else if (startDate > today) {
+    startForWeek = startDate; // data de início futura, mas ainda na semana
+  } else {
+    startForWeek = today; // data de início já passou, começa de hoje
+  }
 
-  // Para mês: data de início ou hoje, o que for maior
+  let daysRemainingWeek = 0;
+  if (startForWeek) {
+    daysRemainingWeek = getDaysInclusive(startForWeek, sundayOfWeek);
+  }
+
   const startForMonth = startDate > today ? startDate : today;
-
-  const daysRemainingWeek = getDaysInclusive(startForWeek, sundayOfWeek);
   const daysRemainingMonth = getDaysInclusive(startForMonth, lastDayOfMonth);
 
-  const weekExpenses = getTotalExpenses(startForWeek, sundayOfWeek);
-  const monthExpenses = getTotalExpenses(startForMonth, lastDayOfMonth);
   const todayExpenses = getTotalExpenses(today, today);
+  const weekExpenses = startForWeek ? getTotalExpenses(startForWeek, sundayOfWeek) : 0;
+  const monthExpenses = getTotalExpenses(startForMonth, lastDayOfMonth);
 
   document.getElementById('daily-balance').textContent =
     `Saldo do dia: R$ ${(dailyValue - todayExpenses).toFixed(2)}`;
-
   document.getElementById('weekly-balance').textContent =
     `Saldo da semana: R$ ${(dailyValue * daysRemainingWeek - weekExpenses).toFixed(2)}`;
-
   document.getElementById('monthly-balance').textContent =
     `Saldo do mês: R$ ${(dailyValue * daysRemainingMonth - monthExpenses).toFixed(2)}`;
 }
