@@ -1,5 +1,3 @@
-// script.js
-
 document.addEventListener("DOMContentLoaded", () => {
   const setupSection = document.getElementById("setup-section");
   const entrySection = document.getElementById("entry-section");
@@ -11,22 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const dailySummary = document.getElementById("daily-summary");
   const weeklySummary = document.getElementById("weekly-summary");
   const monthlySummary = document.getElementById("monthly-summary");
+  const resetButton = document.getElementById("reset-button");
 
-  const addResetButton = () => {
-    if (!document.getElementById("reset-button")) {
-      const resetButton = document.createElement("button");
-      resetButton.id = "reset-button";
-      resetButton.textContent = "Resetar App";
-      resetButton.style.marginTop = "1rem";
-      resetButton.onclick = () => {
-        if (confirm("Tem certeza que deseja resetar o app? Todos os dados serão perdidos.")) {
-          localStorage.clear();
-          location.reload();
-        }
-      };
-      document.body.appendChild(resetButton);
-    }
-  };
+  const getToday = () => new Date().toISOString().split("T")[0];
 
   const loadConfig = () => {
     const dailyBudget = localStorage.getItem("dailyBudget");
@@ -47,19 +32,36 @@ document.addEventListener("DOMContentLoaded", () => {
     return JSON.parse(localStorage.getItem(`expenses-${date}`)) || [];
   };
 
-  const getToday = () => new Date().toISOString().split("T")[0];
+  const renderExpenses = (date) => {
+    const expenses = loadExpenses(date);
+    expenseList.innerHTML = "";
+    expenses.forEach((e, i) => {
+      const li = document.createElement("li");
+      li.textContent = `${e.description}: R$ ${e.amount.toFixed(2)}`;
+      const del = document.createElement("button");
+      del.textContent = "❌";
+      del.onclick = () => {
+        expenses.splice(i, 1);
+        saveExpenses(date, expenses);
+        renderExpenses(date);
+        updateSummaries();
+      };
+      li.appendChild(del);
+      expenseList.appendChild(li);
+    });
+  };
 
-  const calculateSummaries = (config) => {
+  const updateSummaries = () => {
+    const config = loadConfig();
     const today = getToday();
     const expensesToday = loadExpenses(today);
     const spentToday = expensesToday.reduce((sum, e) => sum + e.amount, 0);
-    const remainingToday = config.dailyBudget - spentToday;
-    dailySummary.textContent = `Saldo do dia: R$ ${remainingToday.toFixed(2)}`;
+    dailySummary.textContent = `Saldo do dia: R$ ${(config.dailyBudget - spentToday).toFixed(2)}`;
 
-    // Weekly summary
-    const start = new Date(today);
-    const day = start.getDay();
-    const diffToMonday = (day + 6) % 7;
+    // Weekly
+    const todayDate = new Date(today);
+    const start = new Date(todayDate);
+    const diffToMonday = (start.getDay() + 6) % 7;
     start.setDate(start.getDate() - diffToMonday);
     let weekSpent = 0;
 
@@ -70,11 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const dayExpenses = loadExpenses(dStr);
       weekSpent += dayExpenses.reduce((sum, e) => sum + e.amount, 0);
     }
-
     const weeklyTotal = config.dailyBudget * 7;
     weeklySummary.textContent = `Saldo da semana: R$ ${(weeklyTotal - weekSpent).toFixed(2)}`;
 
-    // Monthly summary
+    // Monthly
     const [year, month] = today.split("-");
     const daysInMonth = new Date(year, month, 0).getDate();
     let monthSpent = 0;
@@ -84,45 +85,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const dayExpenses = loadExpenses(dStr);
       monthSpent += dayExpenses.reduce((sum, e) => sum + e.amount, 0);
     }
-
     const monthlyTotal = config.dailyBudget * daysInMonth;
     monthlySummary.textContent = `Saldo do mês: R$ ${(monthlyTotal - monthSpent).toFixed(2)}`;
   };
 
-  const renderExpenses = (date) => {
-    const expenses = loadExpenses(date);
-    expenseList.innerHTML = "";
-    expenses.forEach((e, i) => {
-      const li = document.createElement("li");
-      li.textContent = `${e.description}: R$ ${e.amount.toFixed(2)} `;
-      const del = document.createElement("button");
-      del.textContent = "❌";
-      del.onclick = () => {
-        expenses.splice(i, 1);
-        saveExpenses(date, expenses);
-        renderExpenses(date);
-        calculateSummaries(loadConfig());
-      };
-      li.appendChild(del);
-      expenseList.appendChild(li);
-    });
-  };
-
-  const startApp = (config) => {
+  const startApp = () => {
+    const config = loadConfig();
+    if (!config) return;
     setupSection.style.display = "none";
     entrySection.style.display = "block";
     summarySection.style.display = "block";
-    const today = getToday();
-    todaySpan.textContent = today;
-    renderExpenses(today);
-    calculateSummaries(config);
-    addResetButton();
+    todaySpan.textContent = getToday();
+    renderExpenses(getToday());
+    updateSummaries();
   };
 
-  // Initialize
-  const existingConfig = loadConfig();
-  if (existingConfig) {
-    startApp(existingConfig);
+  const config = loadConfig();
+  if (config) {
+    startApp();
   } else {
     setupSection.style.display = "block";
   }
@@ -133,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const startDate = document.getElementById("start-date").value;
     if (dailyBudget > 0 && startDate) {
       saveConfig(dailyBudget, startDate);
-      startApp({ dailyBudget, startDate });
+      startApp();
     }
   });
 
@@ -141,14 +121,21 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     const description = document.getElementById("description").value;
     const amount = parseFloat(document.getElementById("amount").value);
-    const today = getToday();
     if (description && amount > 0) {
+      const today = getToday();
       const expenses = loadExpenses(today);
       expenses.push({ description, amount });
       saveExpenses(today, expenses);
       renderExpenses(today);
-      calculateSummaries(loadConfig());
+      updateSummaries();
       expenseForm.reset();
+    }
+  });
+
+  resetButton.addEventListener("click", () => {
+    if (confirm("Deseja realmente resetar o app?")) {
+      localStorage.clear();
+      location.reload();
     }
   });
 });
