@@ -63,6 +63,15 @@ function getSundayOfWeek(dateStr) {
   return sunday.toISOString().split('T')[0];
 }
 
+function getMondayOfWeek(dateStr) {
+  const date = new Date(dateStr);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // domingo = 0, volta 6 dias; outros, volta para segunda
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  return monday.toISOString().split('T')[0];
+}
+
 function getDaysInclusive(startStr, endStr) {
   const start = new Date(startStr);
   const end = new Date(endStr);
@@ -82,11 +91,14 @@ function renderSummary() {
 
   const today = new Date().toISOString().split('T')[0];
 
+  const mondayOfWeek = getMondayOfWeek(today);
   const sundayOfWeek = getSundayOfWeek(today);
   const lastDayOfMonth = getLastDayOfMonth(today).toISOString().split('T')[0];
 
-  // Começar a contar a partir da data mais tardia entre data de início e hoje
-  const startForWeek = startDate > today ? startDate : today;
+  // Para semana: começa na segunda ou data de início, o que for maior
+  const startForWeek = startDate < mondayOfWeek ? mondayOfWeek : startDate;
+
+  // Para mês: data de início ou hoje, o que for maior
   const startForMonth = startDate > today ? startDate : today;
 
   const daysRemainingWeek = getDaysInclusive(startForWeek, sundayOfWeek);
