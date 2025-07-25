@@ -92,20 +92,16 @@ function renderSummary() {
 
   let startForWeek;
   if (startDate > sundayOfWeek) {
-    startForWeek = null; // data de início depois do domingo → 0 dias
+    startForWeek = null;
   } else if (startDate < mondayOfWeek) {
-    startForWeek = today; // data de início antes da semana → começa de hoje
+    startForWeek = today;
   } else if (startDate > today) {
-    startForWeek = startDate; // data de início futura, mas ainda na semana
+    startForWeek = startDate;
   } else {
-    startForWeek = today; // data de início já passou, começa de hoje
+    startForWeek = today;
   }
 
-  let daysRemainingWeek = 0;
-  if (startForWeek) {
-    daysRemainingWeek = getDaysInclusive(startForWeek, sundayOfWeek);
-  }
-
+  let daysRemainingWeek = startForWeek ? getDaysInclusive(startForWeek, sundayOfWeek) : 0;
   const startForMonth = startDate > today ? startDate : today;
   const daysRemainingMonth = getDaysInclusive(startForMonth, lastDayOfMonth);
 
