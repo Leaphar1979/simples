@@ -1,53 +1,48 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sabóia - Controle Diário de Gastos</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sabóia - Controle Diário</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
-
 <body>
-  <header>
-    <h1>Sabóia</h1>
-    <p>Controle diário de gastos com visão semanal e mensal</p>
-    <button id="reset-app">🔁 Reset App</button>
-  </header>
+  <div class="container">
+    <h1>Sabóia - Controle Diário de Gastos</h1>
 
-  <main>
     <section id="setup-section">
       <h2>Configuração Inicial</h2>
       <form id="setup-form">
-        <label>Saldo diário (R$): <input type="number" id="daily-budget" required /></label>
-        <label>Data de início: <input type="date" id="start-date" required /></label>
+        <label>Valor diário disponível:
+          <input type="number" id="daily-budget" required />
+        </label>
+        <label>Data de início:
+          <input type="date" id="start-date" required />
+        </label>
         <button type="submit">Iniciar</button>
       </form>
     </section>
 
-    <section id="entry-section" style="display:none;">
-      <h2>Lançar Gasto de Hoje (<span id="today"></span>)</h2>
+    <section id="entry-section" style="display: none;">
+      <h2>Gastos do dia <span id="today"></span></h2>
       <form id="expense-form">
-        <label>Descrição: <input type="text" id="description" required /></label>
-        <label>Valor (R$): <input type="number" id="amount" required /></label>
-        <button type="submit">Adicionar Gasto</button>
+        <input type="text" id="description" placeholder="Descrição" required />
+        <input type="number" id="amount" step="0.01" placeholder="Valor" required />
+        <button type="submit">Adicionar</button>
       </form>
       <ul id="expense-list"></ul>
     </section>
 
-    <section id="summary-section" style="display:none;">
+    <section id="summary-section" style="display: none;">
       <h2>Resumo</h2>
-      <div id="daily-summary"></div>
-      <div id="weekly-summary"></div>
-      <div id="monthly-summary"></div>
+      <p id="daily-summary"></p>
+      <p id="weekly-summary"></p>
+      <p id="monthly-summary"></p>
     </section>
-  </main>
 
-  <footer>
-    <p>&copy; 2025 Sabóia App</p>
-  </footer>
+    <button id="reset-button" style="margin-top: 1rem;">Resetar App</button>
+  </div>
 
   <script src="script.js"></script>
 </body>
-
 </html>
