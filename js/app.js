@@ -1,139 +1,134 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const setupSection = document.getElementById('setup-section');
-  const entrySection = document.getElementById('entry-section');
-  const summarySection = document.getElementById('summary-section');
-  const setupForm = document.getElementById('setup-form');
-  const expenseForm = document.getElementById('expense-form');
-  const todaySpan = document.getElementById('today');
-  const expenseList = document.getElementById('expense-list');
-  const dailySummary = document.getElementById('daily-summary');
-  const weeklySummary = document.getElementById('weekly-summary');
-  const monthlySummary = document.getElementById('monthly-summary');
-  const resetButton = document.getElementById('reset-button');
+document.addEventListener("DOMContentLoaded", () => {
+  const setupSection = document.getElementById("setup-section");
+  const entrySection = document.getElementById("entry-section");
+  const summarySection = document.getElementById("summary-section");
+  const setupForm = document.getElementById("setup-form");
+  const expenseForm = document.getElementById("expense-form");
+  const todaySpan = document.getElementById("today");
+  const expenseList = document.getElementById("expense-list");
+  const resetBtn = document.getElementById("reset-app");
 
-  function formatDate(date) {
-    return date.toISOString().split('T')[0];
+  function saveConfig(daily, startDate) {
+    localStorage.setItem("dailyBudget", daily);
+    localStorage.setItem("startDate", startDate);
   }
 
   function loadConfig() {
-    const budget = localStorage.getItem('dailyBudget');
-    const startDate = localStorage.getItem('startDate');
-    if (budget && startDate) {
-      document.getElementById('daily-budget').value = budget;
-      document.getElementById('start-date').value = startDate;
-      return { budget: parseFloat(budget), startDate };
-    }
-    return null;
+    return {
+      dailyBudget: parseFloat(localStorage.getItem("dailyBudget")),
+      startDate: localStorage.getItem("startDate")
+    };
   }
 
-  function saveConfig(budget, startDate) {
-    localStorage.setItem('dailyBudget', budget);
-    localStorage.setItem('startDate', startDate);
+  function addExpense(date, description, amount) {
+    const expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
+    expenses.push({ date, description, amount });
+    localStorage.setItem("expenses", JSON.stringify(expenses));
   }
 
-  function getExpenses() {
-    return JSON.parse(localStorage.getItem('expenses') || '[]');
-  }
-
-  function saveExpense(description, amount) {
-    const expenses = getExpenses();
-    expenses.push({
-      date: formatDate(new Date()),
-      description,
-      amount: parseFloat(amount)
-    });
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }
-
-  function resetApp() {
-    localStorage.clear();
-    location.reload();
-  }
-
-  function showApp() {
-    setupSection.style.display = 'none';
-    entrySection.style.display = 'block';
-    summarySection.style.display = 'block';
-    todaySpan.textContent = formatDate(new Date());
+  function removeExpense(index) {
+    const expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
+    expenses.splice(index, 1);
+    localStorage.setItem("expenses", JSON.stringify(expenses));
     renderExpenses();
     renderSummaries();
   }
 
   function renderExpenses() {
-    const expenses = getExpenses().filter(e => e.date === formatDate(new Date()));
-    expenseList.innerHTML = '';
-    expenses.forEach(exp => {
-      const li = document.createElement('li');
-      li.textContent = `${exp.description} - R$ ${exp.amount.toFixed(2)}`;
+    const today = new Date().toISOString().split("T")[0];
+    const expenses = JSON.parse(localStorage.getItem("expenses") || "[]").filter(e => e.date === today);
+    expenseList.innerHTML = "";
+    expenses.forEach((e, i) => {
+      const li = document.createElement("li");
+      li.textContent = `${e.description}: R$ ${e.amount.toFixed(2)} `;
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "🗑️";
+      delBtn.onclick = () => removeExpense(i);
+      li.appendChild(delBtn);
       expenseList.appendChild(li);
     });
   }
 
   function renderSummaries() {
-    const budget = parseFloat(localStorage.getItem('dailyBudget'));
-    const startDate = new Date(localStorage.getItem('startDate'));
-    const today = new Date();
-    const expenses = getExpenses();
+    const daily = document.getElementById("daily-summary");
+    const weekly = document.getElementById("weekly-summary");
+    const monthly = document.getElementById("monthly-summary");
+    const { dailyBudget, startDate } = loadConfig();
+    const today = new Date().toISOString().split("T")[0];
+    const expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
 
-    let dailyTotal = 0;
-    let weeklyTotal = 0;
-    let monthlyTotal = 0;
+    const dailyTotal = expenses
+      .filter(e => e.date === today)
+      .reduce((acc, e) => acc + parseFloat(e.amount), 0);
+    const todayBalance = dailyBudget - dailyTotal;
 
-    expenses.forEach(exp => {
-      const expDate = new Date(exp.date);
-      if (exp.date === formatDate(today)) {
-        dailyTotal += exp.amount;
-      }
+    const start = new Date(startDate);
+    const now = new Date(today);
+    const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
 
-      const firstDayOfWeek = new Date(today);
-      firstDayOfWeek.setDate(today.getDate() - today.getDay());
-      if (expDate >= firstDayOfWeek && expDate <= today) {
-        weeklyTotal += exp.amount;
-      }
-
-      if (
-        expDate.getFullYear() === today.getFullYear() &&
-        expDate.getMonth() === today.getMonth()
-      ) {
-        monthlyTotal += exp.amount;
-      }
+    const weeklyStart = new Date(now);
+    weeklyStart.setDate(now.getDate() - now.getDay()); // Sunday
+    const weekDates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weeklyStart);
+      d.setDate(weeklyStart.getDate() + i);
+      return d.toISOString().split("T")[0];
     });
 
-    const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
-    const weekDays = today.getDay() + 1;
-    const monthDays = today.getDate();
+    const weeklyTotal = expenses
+      .filter(e => weekDates.includes(e.date))
+      .reduce((acc, e) => acc + parseFloat(e.amount), 0);
 
-    dailySummary.textContent = `Hoje: R$ ${budget.toFixed(2)} - R$ ${dailyTotal.toFixed(2)} = R$ ${(budget - dailyTotal).toFixed(2)}`;
-    weeklySummary.textContent = `Semana: R$ ${(budget * weekDays).toFixed(2)} - R$ ${weeklyTotal.toFixed(2)} = R$ ${(budget * weekDays - weeklyTotal).toFixed(2)}`;
-    monthlySummary.textContent = `Mês: R$ ${(budget * monthDays).toFixed(2)} - R$ ${monthlyTotal.toFixed(2)} = R$ ${(budget * monthDays - monthlyTotal).toFixed(2)}`;
+    const month = today.slice(0, 7);
+    const monthlyTotal = expenses
+      .filter(e => e.date.startsWith(month))
+      .reduce((acc, e) => acc + parseFloat(e.amount), 0);
+
+    daily.innerHTML = `<strong>Saldo do dia:</strong> R$ ${todayBalance.toFixed(2)}`;
+    weekly.innerHTML = `<strong>Acumulado da semana:</strong> R$ ${(dailyBudget * 7 - weeklyTotal).toFixed(2)}`;
+    monthly.innerHTML = `<strong>Restante do mês:</strong> R$ ${(dailyBudget * diffDays - monthlyTotal).toFixed(2)}`;
   }
 
-  const config = loadConfig();
-  if (config) {
-    showApp();
-  }
-
-  setupForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const budget = document.getElementById('daily-budget').value;
-    const startDate = document.getElementById('start-date').value;
-    saveConfig(budget, startDate);
-    showApp();
-  });
-
-  resetButton.addEventListener('click', () => {
-    if (confirm("Tem certeza que deseja resetar todos os dados?")) {
-      resetApp();
+  function updateUI() {
+    const { dailyBudget, startDate } = loadConfig();
+    if (dailyBudget && startDate) {
+      setupSection.style.display = "none";
+      entrySection.style.display = "block";
+      summarySection.style.display = "block";
+      todaySpan.textContent = new Date().toLocaleDateString();
+      renderExpenses();
+      renderSummaries();
+    } else {
+      setupSection.style.display = "block";
+      entrySection.style.display = "none";
+      summarySection.style.display = "none";
     }
+  }
+
+  setupForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const daily = parseFloat(document.getElementById("daily-budget").value);
+    const startDate = document.getElementById("start-date").value;
+    saveConfig(daily, startDate);
+    updateUI();
   });
 
-  expenseForm.addEventListener('submit', e => {
+  expenseForm.addEventListener("submit", e => {
     e.preventDefault();
-    const description = document.getElementById('description').value;
-    const amount = document.getElementById('amount').value;
-    saveExpense(description, amount);
+    const description = document.getElementById("description").value;
+    const amount = parseFloat(document.getElementById("amount").value);
+    const date = new Date().toISOString().split("T")[0];
+    addExpense(date, description, amount);
     expenseForm.reset();
     renderExpenses();
     renderSummaries();
   });
+
+  resetBtn.addEventListener("click", () => {
+    if (confirm("Deseja realmente resetar todos os dados do app?")) {
+      localStorage.clear();
+      location.reload();
+    }
+  });
+
+  updateUI();
 });
