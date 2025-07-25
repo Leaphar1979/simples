@@ -12,8 +12,8 @@
 
   <section>
     <form id="config-form">
-      <label for="daily-budget">Valor diário (R$):</label>
-      <input type="number" id="daily-budget" step="0.01" required />
+      <label for="daily-value">Valor diário (R$):</label>
+      <input type="number" id="daily-value" step="0.01" required />
 
       <label for="start-date">Data de início:</label>
       <input type="date" id="start-date" required />
@@ -30,8 +30,8 @@
       <label for="expense-amount">Valor gasto (R$):</label>
       <input type="number" id="expense-amount" step="0.01" required />
 
-      <label for="expense-desc">Descrição:</label>
-      <input type="text" id="expense-desc" placeholder="Ex: Café, Uber, etc." />
+      <label for="expense-description">Descrição:</label>
+      <input type="text" id="expense-description" placeholder="Ex: Café, Uber, etc." required />
 
       <button type="submit">Adicionar gasto</button>
     </form>
@@ -39,17 +39,17 @@
 
   <section>
     <h3>Gastos registrados</h3>
-    <ul id="expense-list"></ul>
+    <ul id="expenses-list"></ul>
     <button id="reset-button">Resetar dados</button>
   </section>
 
   <section class="summary">
     <h3>Resumo</h3>
-    <p id="daily-summary">Saldo do dia:</p>
-    <p id="weekly-summary">Saldo da semana:</p>
-    <p id="monthly-summary">Saldo do mês:</p>
+    <p id="daily-balance">Saldo do dia:</p>
+    <p id="weekly-balance">Saldo da semana:</p>
+    <p id="monthly-balance">Saldo do mês:</p>
   </section>
 
-  <script src="js/app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
