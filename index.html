@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sabóia - Controle Diário de Gastos</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <header>
     <h1>Sabóia</h1>
     <p>Controle diário de gastos com visão semanal e mensal</p>
+    <button id="reset-app">🔁 Reset App</button>
   </header>
 
   <main>
@@ -19,7 +22,6 @@
         <label>Saldo diário (R$): <input type="number" id="daily-budget" required /></label>
         <label>Data de início: <input type="date" id="start-date" required /></label>
         <button type="submit">Iniciar</button>
-        <button type="button" id="reset-button">Resetar</button>
       </form>
     </section>
 
@@ -45,6 +47,7 @@
     <p>&copy; 2025 Sabóia App</p>
   </footer>
 
-  <script src="js/app.js"></script>
+  <script src="script.js"></script>
 </body>
+
 </html>
