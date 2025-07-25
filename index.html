@@ -2,51 +2,53 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sabóia Finance App</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sabóia - Controle Financeiro Diário</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>Sabóia Finance App</h1>
+  <h1>Sabóia</h1>
+  <h2>Controle Financeiro Diário</h2>
 
-    <form id="settings-form">
-      <label for="daily-value">Valor diário (R$):</label>
-      <input type="number" id="daily-value" step="0.01" required />
-      
-      <label for="start-date">Data de início do mês:</label>
+  <section>
+    <form id="config-form">
+      <label for="daily-budget">Valor diário (R$):</label>
+      <input type="number" id="daily-budget" step="0.01" required />
+
+      <label for="start-date">Data de início:</label>
       <input type="date" id="start-date" required />
 
-      <button type="submit">Salvar Configurações</button>
+      <button type="submit">Salvar configurações</button>
     </form>
+  </section>
 
+  <section>
     <form id="expense-form">
       <label for="expense-date">Data:</label>
       <input type="date" id="expense-date" required />
 
-      <label for="expense-amount">Valor (R$):</label>
+      <label for="expense-amount">Valor gasto (R$):</label>
       <input type="number" id="expense-amount" step="0.01" required />
 
-      <label for="expense-description">Descrição:</label>
-      <input type="text" id="expense-description" required />
+      <label for="expense-desc">Descrição:</label>
+      <input type="text" id="expense-desc" placeholder="Ex: Café, Uber, etc." />
 
-      <button type="submit">Adicionar Despesa</button>
+      <button type="submit">Adicionar gasto</button>
     </form>
+  </section>
 
-    <div id="summary">
-      <h2>Resumo</h2>
-      <p id="daily-balance">Saldo do dia:</p>
-      <p id="weekly-balance">Saldo da semana:</p>
-      <p id="monthly-balance">Saldo do mês:</p>
-    </div>
+  <section>
+    <h3>Gastos registrados</h3>
+    <ul id="expense-list"></ul>
+    <button id="reset-button">Resetar dados</button>
+  </section>
 
-    <div id="expenses">
-      <h2>Despesas</h2>
-      <ul id="expenses-list"></ul>
-    </div>
-
-    <button onclick="resetAll()">Resetar Tudo</button>
-  </div>
+  <section class="summary">
+    <h3>Resumo</h3>
+    <p id="daily-summary">Saldo do dia:</p>
+    <p id="weekly-summary">Saldo da semana:</p>
+    <p id="monthly-summary">Saldo do mês:</p>
+  </section>
 
   <script src="js/app.js"></script>
 </body>
