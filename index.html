@@ -2,52 +2,54 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sabóia - Controle Financeiro Diário</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>Sabóia</h1>
-    <p>Controle Financeiro Diário</p>
+    <p>Controle diário de gastos com saldo acumulado</p>
   </header>
 
-  <main>
-    <section id="config-section">
-      <h2>Configuração</h2>
-      <form id="config-form">
-        <label for="daily-limit">Valor diário (R$):</label>
-        <input type="number" id="daily-limit" required />
-        <label for="start-date">Data de início:</label>
-        <input type="date" id="start-date" required />
-        <button type="submit">Salvar Configuração</button>
-      </form>
-    </section>
+  <!-- Configuração inicial -->
+  <section id="setup-section">
+    <h2>Configuração inicial</h2>
+    <form id="setup-form">
+      <label for="daily-budget">Valor diário fixo (R$):</label>
+      <input type="number" id="daily-budget" step="0.01" required />
 
-    <section id="entry-section">
-      <h2>Lançamento Diário</h2>
-      <form id="entry-form">
-        <label for="entry-date">Data:</label>
-        <input type="date" id="entry-date" required />
-        <label for="entry-amount">Gasto do Dia (R$):</label>
-        <input type="number" id="entry-amount" required />
-        <button type="submit">Lançar</button>
-      </form>
-      <ul id="entries-list"></ul>
-    </section>
+      <label for="start-date">Data de início:</label>
+      <input type="date" id="start-date" required />
 
-    <section id="summary-section">
-      <h2>Resumo</h2>
-      <div id="daily-summary"></div>
-      <div id="weekly-summary"></div>
-      <div id="monthly-summary"></div>
-    </section>
-  </main>
+      <button type="submit">Salvar Configuração</button>
+    </form>
+  </section>
+
+  <!-- Entrada de gastos -->
+  <section id="entry-section" style="display:none;">
+    <h2>Registro de Gastos</h2>
+    <p>Data atual: <span id="today"></span></p>
+    <form id="expense-form">
+      <input type="text" id="description" placeholder="Descrição" required />
+      <input type="number" id="amount" placeholder="Valor (R$)" step="0.01" required />
+      <button type="submit">Adicionar gasto</button>
+    </form>
+    <ul id="expense-list"></ul>
+  </section>
+
+  <!-- Resumo -->
+  <section id="summary-section" style="display:none;">
+    <h2>Resumo</h2>
+    <p id="daily-summary"></p>
+    <p id="weekly-summary"></p>
+    <p id="monthly-summary"></p>
+  </section>
 
   <footer>
-    <p>App Sabóia &copy; 2025</p>
+    <p>App Sabóia - Controle simples e diário de gastos</p>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
