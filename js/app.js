@@ -1,178 +1,122 @@
-const configForm = document.getElementById('config-form');
-const expenseForm = document.getElementById('expense-form');
-const expenseList = document.getElementById('expense-list');
-const resetButton = document.getElementById('reset-button');
-
-const dailySummary = document.getElementById('daily-summary');
-const weeklySummary = document.getElementById('weekly-summary');
-const monthlySummary = document.getElementById('monthly-summary');
-
-let config = JSON.parse(localStorage.getItem('config')) || null;
+let dailyValue = parseFloat(localStorage.getItem('dailyValue')) || 0;
+let startDate = localStorage.getItem('startDate') || null;
 let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
 
-function saveConfig(dailyBudget, startDate) {
-  config = { dailyBudget: parseFloat(dailyBudget), startDate };
-  localStorage.setItem('config', JSON.stringify(config));
-  renderSummary();
-}
+document.getElementById('daily-budget').value = dailyValue || '';
+document.getElementById('start-date').value = startDate || '';
 
-function saveExpense(date, amount, description) {
-  expenses.push({ date, amount: parseFloat(amount), description });
+document.getElementById('config-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  dailyValue = parseFloat(document.getElementById('daily-budget').value);
+  startDate = document.getElementById('start-date').value;
+  localStorage.setItem('dailyValue', dailyValue);
+  localStorage.setItem('startDate', startDate);
+  renderSummary();
+});
+
+document.getElementById('expense-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const date = document.getElementById('expense-date').value;
+  const amount = parseFloat(document.getElementById('expense-amount').value);
+  const desc = document.getElementById('expense-desc').value.trim();
+  if (!date || isNaN(amount)) return;
+
+  expenses.push({ date, amount, desc });
   localStorage.setItem('expenses', JSON.stringify(expenses));
   renderExpenses();
   renderSummary();
-}
+  this.reset();
+});
+
+document.getElementById('reset-button').addEventListener('click', function () {
+  if (confirm('Deseja realmente apagar todos os dados?')) {
+    localStorage.clear();
+    dailyValue = 0;
+    startDate = null;
+    expenses = [];
+    document.getElementById('daily-budget').value = '';
+    document.getElementById('start-date').value = '';
+    renderExpenses();
+    renderSummary();
+  }
+});
 
 function renderExpenses() {
-  expenseList.innerHTML = '';
-  const sortedExpenses = [...expenses].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  sortedExpenses.forEach((exp, index) => {
-    const li = document.createElement('li');
-    li.textContent = `${exp.date} - R$ ${exp.amount.toFixed(2)} (${exp.description || 'Sem descrição'})`;
-
-    const delBtn = document.createElement('button');
-    delBtn.textContent = 'Excluir';
-    delBtn.onclick = () => {
-      expenses.splice(index, 1);
-      localStorage.setItem('expenses', JSON.stringify(expenses));
-      renderExpenses();
-      renderSummary();
-    };
-
-    li.appendChild(delBtn);
-    expenseList.appendChild(li);
+  const list = document.getElementById('expense-list');
+  list.innerHTML = '';
+  expenses.forEach(({ date, amount, desc }, index) => {
+    const item = document.createElement('li');
+    item.textContent = `${date} - R$${amount.toFixed(2)}${desc ? ' - ' + desc : ''}`;
+    list.appendChild(item);
   });
-}
-
-function calculateDailyBalances() {
-  if (!config) return {};
-
-  const dailyBudget = config.dailyBudget;
-  const startDate = new Date(config.startDate);
-  const balances = {};
-  let previousBalance = 0;
-
-  const today = new Date();
-  const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-
-  for (let i = 0; i <= daysElapsed; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-    const dateStr = date.toISOString().split('T')[0];
-
-    const dayExpenses = expenses.filter(e => e.date === dateStr);
-    const totalSpent = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
-
-    const available = dailyBudget + previousBalance;
-    const endBalance = available - totalSpent;
-
-    balances[dateStr] = {
-      date: dateStr,
-      dailyBudget,
-      previousBalance,
-      totalSpent,
-      endBalance,
-    };
-
-    previousBalance = endBalance;
-  }
-
-  return balances;
 }
 
 function renderSummary() {
-  const balances = calculateDailyBalances();
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayBalance = balances[todayStr];
+  if (!dailyValue || !startDate) return;
 
-  if (todayBalance) {
-    const { dailyBudget, previousBalance, totalSpent, endBalance } = todayBalance;
+  const today = new Date().toISOString().split('T')[0];
+  const mondayOfWeek = getMondayOfWeek(today);
+  const sundayOfWeek = getSundayOfWeek(today);
+  const lastDayOfMonth = getLastDayOfMonth(today).toISOString().split('T')[0];
 
-    dailySummary.innerHTML = `
-      <strong>Saldo do dia:</strong><br>
-      R$ ${dailyBudget.toFixed(2)}<br>
-      + R$ ${previousBalance.toFixed(2)} (saldo anterior)<br>
-      — R$ ${totalSpent.toFixed(2)} (gastos do dia)<br>
-      = <strong>R$ ${endBalance.toFixed(2)}</strong>
-    `;
+  let startForWeek;
+  if (startDate > sundayOfWeek) {
+    startForWeek = null;
+  } else if (startDate < mondayOfWeek) {
+    startForWeek = mondayOfWeek;
   } else {
-    dailySummary.textContent = 'Nenhum dado para hoje.';
+    startForWeek = startDate > today ? today : startDate;
   }
 
-  renderWeeklySummary(balances);
-  renderMonthlySummary(balances);
+  let daysRemainingWeek = startForWeek ? getDaysInclusive(today, sundayOfWeek) : 0;
+  const startForMonth = startDate > today ? today : startDate;
+  const daysRemainingMonth = getDaysInclusive(today, lastDayOfMonth);
+
+  const todayExpenses = getTotalExpenses(today, today);
+  const weekExpenses = startForWeek ? getTotalExpenses(startForWeek, sundayOfWeek) : 0;
+  const monthExpenses = getTotalExpenses(startForMonth, lastDayOfMonth);
+
+  document.getElementById('daily-balance').textContent =
+    `Saldo do dia: R$ ${(dailyValue - todayExpenses).toFixed(2)}`;
+  document.getElementById('weekly-balance').textContent =
+    `Saldo da semana: R$ ${(dailyValue * daysRemainingWeek - weekExpenses).toFixed(2)}`;
+  document.getElementById('monthly-balance').textContent =
+    `Saldo do mês: R$ ${(dailyValue * daysRemainingMonth - monthExpenses).toFixed(2)}`;
 }
 
-function renderWeeklySummary(balances) {
-  const dates = Object.keys(balances);
-  const currentWeek = getWeekDates(new Date());
-  let total = 0;
-
-  dates.forEach(date => {
-    if (currentWeek.includes(date)) {
-      total += balances[date].endBalance;
-    }
-  });
-
-  weeklySummary.textContent = `Saldo da semana: R$ ${total.toFixed(2)}`;
+function getTotalExpenses(start, end) {
+  return expenses
+    .filter(e => e.date >= start && e.date <= end)
+    .reduce((sum, e) => sum + e.amount, 0);
 }
 
-function renderMonthlySummary(balances) {
-  const month = new Date().toISOString().slice(0, 7); // yyyy-mm
-  const dates = Object.keys(balances);
-  let total = 0;
-
-  dates.forEach(date => {
-    if (date.startsWith(month)) {
-      total += balances[date].endBalance;
-    }
-  });
-
-  monthlySummary.textContent = `Saldo do mês: R$ ${total.toFixed(2)}`;
+function getMondayOfWeek(dateStr) {
+  const date = new Date(dateStr);
+  const day = date.getDay();
+  const diff = date.getDate() - (day === 0 ? 6 : day - 1);
+  date.setDate(diff);
+  return date.toISOString().split('T')[0];
 }
 
-function getWeekDates(date) {
-  const start = new Date(date);
-  start.setDate(date.getDate() - date.getDay() + 1); // Segunda
-
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    return d.toISOString().split('T')[0];
-  });
+function getSundayOfWeek(dateStr) {
+  const date = new Date(dateStr);
+  const day = date.getDay();
+  const diff = date.getDate() + (day === 0 ? 0 : 7 - day);
+  date.setDate(diff);
+  return date.toISOString().split('T')[0];
 }
 
-configForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const dailyBudget = document.getElementById('daily-budget').value;
-  const startDate = document.getElementById('start-date').value;
-  saveConfig(dailyBudget, startDate);
-});
+function getLastDayOfMonth(dateStr) {
+  const date = new Date(dateStr);
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
 
-expenseForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const date = document.getElementById('expense-date').value;
-  const amount = document.getElementById('expense-amount').value;
-  const desc = document.getElementById('expense-desc').value;
-  saveExpense(date, amount, desc);
-  expenseForm.reset();
-});
+function getDaysInclusive(start, end) {
+  const s = new Date(start);
+  const e = new Date(end);
+  return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
+}
 
-resetButton.addEventListener('click', () => {
-  if (confirm('Tem certeza que deseja apagar todos os dados?')) {
-    localStorage.removeItem('config');
-    localStorage.removeItem('expenses');
-    config = null;
-    expenses = [];
-    renderExpenses();
-    renderSummary();
-  }
-});
-
-window.onload = () => {
-  if (config) {
-    renderExpenses();
-    renderSummary();
-  }
-};
+// Inicialização
+renderExpenses();
+renderSummary();
