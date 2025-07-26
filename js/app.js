@@ -9,7 +9,11 @@ function saveSettings(e) {
   startDate = document.getElementById('start-date').value;
   localStorage.setItem('dailyValue', dailyValue);
   localStorage.setItem('startDate', startDate);
-  localStorage.setItem('lastCalculatedDate', startDate);
+  lastCalculatedDate = startDate;
+  localStorage.setItem('lastCalculatedDate', lastCalculatedDate);
+
+  // Salvar saldo inicial para a data de início
+  localStorage.setItem('saldo_' + startDate, dailyValue);
   renderSummary();
 }
 
@@ -50,11 +54,11 @@ function renderExpenses() {
   });
 }
 
+// Utilitários
 function getSunday(dateStr) {
   const date = new Date(dateStr);
   const day = date.getDay();
-  const diff = 7 - day;
-  date.setDate(date.getDate() + diff);
+  date.setDate(date.getDate() + (7 - day));
   return date.toISOString().split('T')[0];
 }
 
@@ -63,58 +67,94 @@ function getLastDayOfMonth(dateStr) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
 }
 
-function getDaysInclusive(startStr, endStr) {
-  const start = new Date(startStr);
+function getDaysArray(startStr, endStr) {
+  const dates = [];
+  let current = new Date(startStr);
   const end = new Date(endStr);
-  return Math.max(0, Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1);
+  while (current <= end) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
 }
 
-function getTotalExpenses(start, end) {
+function getTotalExpenses(date) {
   return expenses
-    .filter(exp => exp.date >= start && exp.date <= end)
+    .filter(exp => exp.date === date)
     .reduce((sum, exp) => sum + exp.amount, 0);
 }
 
-function renderSummary() {
+// Principal: calcular saldos diários herdando sobra/falta
+function updateDailyBalances() {
   if (!dailyValue || !startDate) return;
 
+  const today = new Date().toISOString().split('T')[0];
+  const lastSavedDate = localStorage.getItem('lastCalculatedDate') || startDate;
+
+  let currentDate = new Date(lastSavedDate);
+  const todayDate = new Date(today);
+
+  while (currentDate <= todayDate) {
+    const dateStr = currentDate.toISOString().split('T')[0];
+    const prevDate = new Date(currentDate);
+    prevDate.setDate(prevDate.getDate() - 1);
+    const prevDateStr = prevDate.toISOString().split('T')[0];
+
+    let saldoHoje = dailyValue;
+
+    if (dateStr !== startDate) {
+      const saldoOntem = parseFloat(localStorage.getItem('saldo_' + prevDateStr)) || dailyValue;
+      const gastosOntem = getTotalExpenses(prevDateStr);
+      const sobraOuFalta = saldoOntem - gastosOntem;
+      saldoHoje = dailyValue + sobraOuFalta;
+    }
+
+    localStorage.setItem('saldo_' + dateStr, saldoHoje);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  localStorage.setItem('lastCalculatedDate', today);
+}
+
+// Renderizar resumo
+function renderSummary() {
+  updateDailyBalances();
   const today = new Date().toISOString().split('T')[0];
   const sunday = getSunday(today);
   const lastDayOfMonth = getLastDayOfMonth(today);
 
-  // Dias restantes até domingo e até final do mês
-  const daysRemainingWeek = getDaysInclusive(today, sunday);
-  const daysRemainingMonth = getDaysInclusive(today, lastDayOfMonth);
+  // Saldo do dia
+  const saldoHoje = parseFloat(localStorage.getItem('saldo_' + today)) || dailyValue;
+  const gastosHoje = getTotalExpenses(today);
+  const saldoDia = saldoHoje - gastosHoje;
 
-  // Gastos
-  const todayExpenses = getTotalExpenses(today, today);
-  const weekExpenses = getTotalExpenses(today, sunday);
-  const monthExpenses = getTotalExpenses(today, lastDayOfMonth);
+  // Saldo da semana
+  const diasSemana = getDaysArray(today, sunday);
+  let saldoSemana = 0;
+  diasSemana.forEach(dateStr => {
+    const saldoDiaX = parseFloat(localStorage.getItem('saldo_' + dateStr)) || dailyValue;
+    const gastos = getTotalExpenses(dateStr);
+    saldoSemana += saldoDiaX - gastos;
+  });
+
+  // Saldo do mês
+  const diasMes = getDaysArray(today, lastDayOfMonth);
+  let saldoMes = 0;
+  diasMes.forEach(dateStr => {
+    const saldoDiaX = parseFloat(localStorage.getItem('saldo_' + dateStr)) || dailyValue;
+    const gastos = getTotalExpenses(dateStr);
+    saldoMes += saldoDiaX - gastos;
+  });
 
   document.getElementById('daily-balance').textContent =
-    `Saldo do dia: R$ ${(dailyValue - todayExpenses).toFixed(2)}`;
+    `Saldo do dia: R$ ${saldoDia.toFixed(2)}`;
   document.getElementById('weekly-balance').textContent =
-    `Saldo da semana: R$ ${(dailyValue * daysRemainingWeek - weekExpenses).toFixed(2)}`;
+    `Saldo da semana: R$ ${saldoSemana.toFixed(2)}`;
   document.getElementById('monthly-balance').textContent =
-    `Saldo do mês: R$ ${(dailyValue * daysRemainingMonth - monthExpenses).toFixed(2)}`;
+    `Saldo do mês: R$ ${saldoMes.toFixed(2)}`;
 }
 
-function checkNewDay() {
-  const today = new Date().toISOString().split('T')[0];
-  if (lastCalculatedDate && lastCalculatedDate !== today) {
-    // calcular sobra/falta de ontem
-    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0];
-    const yesterdayExpenses = getTotalExpenses(yesterday, yesterday);
-    const diff = dailyValue - yesterdayExpenses;
-
-    // Ajustar dailyValue para hoje somando sobra/falta
-    dailyValue += diff;
-    localStorage.setItem('dailyValue', dailyValue);
-  }
-  lastCalculatedDate = today;
-  localStorage.setItem('lastCalculatedDate', lastCalculatedDate);
-}
-
+// Inicializar
 window.onload = () => {
   const storedValue = localStorage.getItem('dailyValue');
   const storedDate = localStorage.getItem('startDate');
@@ -132,7 +172,6 @@ window.onload = () => {
     expenses = JSON.parse(storedExpenses);
   }
 
-  checkNewDay();
   renderExpenses();
   renderSummary();
 
