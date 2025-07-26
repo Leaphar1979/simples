@@ -14,10 +14,8 @@
     <form id="config-form">
       <label for="daily-budget">Valor diário (R$):</label>
       <input type="number" id="daily-budget" step="0.01" required />
-
       <label for="start-date">Data de início:</label>
       <input type="date" id="start-date" required />
-
       <button type="submit">Salvar configurações</button>
     </form>
   </section>
@@ -26,13 +24,10 @@
     <form id="expense-form">
       <label for="expense-date">Data:</label>
       <input type="date" id="expense-date" required />
-
       <label for="expense-amount">Valor gasto (R$):</label>
       <input type="number" id="expense-amount" step="0.01" required />
-
       <label for="expense-desc">Descrição:</label>
       <input type="text" id="expense-desc" placeholder="Ex: Café, Uber, etc." />
-
       <button type="submit">Adicionar gasto</button>
     </form>
   </section>
@@ -45,7 +40,9 @@
 
   <section class="summary">
     <h3>Resumo</h3>
-    <pre id="summary-output">Saldo diário será exibido aqui.</pre>
+    <div id="daily-summary"></div>
+    <div id="weekly-summary"></div>
+    <div id="monthly-summary"></div>
   </section>
 
   <script src="app.js"></script>
