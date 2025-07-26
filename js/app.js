@@ -1,112 +1,130 @@
 const configForm = document.getElementById("config-form");
 const expenseForm = document.getElementById("expense-form");
-const resetButton = document.getElementById("reset-button");
-const summaryOutput = document.getElementById("summary-output");
 const expenseList = document.getElementById("expense-list");
+const resetButton = document.getElementById("reset-button");
 
-let config = JSON.parse(localStorage.getItem("config")) || null;
+const dailySummary = document.getElementById("daily-summary");
+const weeklySummary = document.getElementById("weekly-summary");
+const monthlySummary = document.getElementById("monthly-summary");
+
+let dailyValue = parseFloat(localStorage.getItem("dailyValue")) || 0;
+let startDate = localStorage.getItem("startDate") || null;
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 
-function saveData() {
-  localStorage.setItem("config", JSON.stringify(config));
-  localStorage.setItem("expenses", JSON.stringify(expenses));
-  updateSummary();
-  renderExpenses();
-}
-
-function resetData() {
-  if (confirm("Tem certeza que deseja resetar todos os dados?")) {
-    localStorage.clear();
-    config = null;
-    expenses = [];
-    summaryOutput.textContent = "Saldo diário será exibido aqui.";
-    expenseList.innerHTML = "";
-  }
-}
-
-function renderExpenses() {
-  expenseList.innerHTML = "";
-  expenses.forEach((exp) => {
-    const li = document.createElement("li");
-    li.textContent = `${exp.date} - R$ ${exp.amount.toFixed(2)} (${exp.desc})`;
-    expenseList.appendChild(li);
-  });
-}
-
-function updateSummary() {
-  if (!config) return;
-
-  const { dailyBudget, startDate } = config;
-  const budget = Number(dailyBudget);
-  const start = new Date(startDate);
-  const today = new Date();
-
-  const days = [];
-  let saldoAnterior = 0;
-
-  for (
-    let d = new Date(start);
-    d <= today;
-    d.setDate(d.getDate() + 1)
-  ) {
-    const dataStr = d.toISOString().split("T")[0];
-    const gastosDoDia = expenses
-      .filter((e) => e.date === dataStr)
-      .map((e) => e.amount);
-    const totalGastos = gastosDoDia.reduce((a, b) => a + b, 0);
-    const saldoDia = budget + saldoAnterior - totalGastos;
-    days.push({
-      data: new Date(d),
-      gastos: expenses.filter((e) => e.date === dataStr),
-      saldoAnterior,
-      saldoDia,
-      totalGastos,
-    });
-    saldoAnterior = saldoDia;
-  }
-
-  let resumo = "";
-  days.forEach((dia) => {
-    const dd = String(dia.data.getDate()).padStart(2, "0");
-    const mm = String(dia.data.getMonth() + 1).padStart(2, "0");
-    resumo += `(${dd}/${mm})\nR$ ${config.dailyBudget}\n`;
-    if (dia.saldoAnterior > 0)
-      resumo += `+R$ ${dia.saldoAnterior.toFixed(2)} (saldo do dia anterior)\n`;
-    if (dia.gastos.length > 0) {
-      dia.gastos.forEach((g) => {
-        resumo += `-R$ ${g.amount.toFixed(2)} (${g.desc})\n`;
-      });
-    }
-    resumo += `———————\nR$ ${dia.saldoDia.toFixed(2)} (saldo do dia)\n\n`;
-  });
-
-  summaryOutput.textContent = resumo.trim();
-}
-
-configForm.addEventListener("submit", (e) => {
+function saveConfig(e) {
   e.preventDefault();
-  const dailyBudget = document.getElementById("daily-budget").value;
-  const startDate = document.getElementById("start-date").value;
-  config = { dailyBudget, startDate };
-  saveData();
-});
+  dailyValue = parseFloat(document.getElementById("daily-budget").value);
+  startDate = document.getElementById("start-date").value;
+  localStorage.setItem("dailyValue", dailyValue);
+  localStorage.setItem("startDate", startDate);
+  updateUI();
+}
 
-expenseForm.addEventListener("submit", (e) => {
+function addExpense(e) {
   e.preventDefault();
   const date = document.getElementById("expense-date").value;
   const amount = parseFloat(document.getElementById("expense-amount").value);
-  const desc = document.getElementById("expense-desc").value || "Sem descrição";
-
+  const desc = document.getElementById("expense-desc").value;
   expenses.push({ date, amount, desc });
-  saveData();
-
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+  updateUI();
   expenseForm.reset();
-});
+}
 
+function resetData() {
+  localStorage.clear();
+  dailyValue = 0;
+  startDate = null;
+  expenses = [];
+  updateUI();
+}
+
+function groupExpensesByDate() {
+  const grouped = {};
+  for (let exp of expenses) {
+    if (!grouped[exp.date]) grouped[exp.date] = [];
+    grouped[exp.date].push(exp);
+  }
+  return grouped;
+}
+
+function calculateDailyBalances() {
+  if (!startDate || !dailyValue) return [];
+
+  const grouped = groupExpensesByDate();
+  const today = new Date().toISOString().split("T")[0];
+  const balances = [];
+  let currentDate = new Date(startDate);
+  let accumulated = 0;
+
+  while (currentDate.toISOString().split("T")[0] <= today) {
+    const key = currentDate.toISOString().split("T")[0];
+    const dayExpenses = grouped[key] || [];
+    const daySpent = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+    accumulated += dailyValue;
+    accumulated -= daySpent;
+
+    balances.push({
+      date: key,
+      expenses: dayExpenses,
+      saldo: parseFloat(accumulated.toFixed(2))
+    });
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return balances;
+}
+
+function updateUI() {
+  expenseList.innerHTML = "";
+  const balances = calculateDailyBalances();
+  const grouped = groupExpensesByDate();
+
+  balances.forEach(({ date, expenses, saldo }) => {
+    const li = document.createElement("li");
+    const dia = new Date(date).getDate();
+    const month = new Date(date).toLocaleDateString("pt-BR", { month: "2-digit" });
+    let html = `<strong>(${dia})</strong><br>R$ ${dailyValue.toFixed(2)}<br>`;
+
+    const prev = balances.find(b => b.date === getPreviousDate(date));
+    if (prev) html += `+${prev.saldo.toFixed(2)} (saldo do dia anterior)<br>`;
+
+    if (expenses.length) {
+      for (let e of expenses) {
+        html += `- ${e.amount.toFixed(2)} (${e.desc || "sem descrição"})<br>`;
+      }
+    }
+
+    html += `<strong>Saldo do dia: R$ ${saldo.toFixed(2)}</strong>`;
+    li.innerHTML = html;
+    expenseList.appendChild(li);
+  });
+
+  const last = balances[balances.length - 1];
+  if (last) dailySummary.innerHTML = `Saldo do dia (${last.date}): R$ ${last.saldo.toFixed(2)}`;
+
+  // semanal e mensal (simplificados)
+  const weekTotal = balances.slice(-7).reduce((s, b) => s + b.saldo, 0);
+  weeklySummary.innerHTML = `Saldo acumulado da semana: R$ ${weekTotal.toFixed(2)}`;
+
+  const month = new Date().toISOString().slice(0, 7);
+  const monthBalances = balances.filter(b => b.date.startsWith(month));
+  const monthTotal = monthBalances.length ? monthBalances[monthBalances.length - 1].saldo : 0;
+  monthlySummary.innerHTML = `Saldo acumulado do mês: R$ ${monthTotal.toFixed(2)}`;
+}
+
+function getPreviousDate(dateStr) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split("T")[0];
+}
+
+// Event listeners
+configForm.addEventListener("submit", saveConfig);
+expenseForm.addEventListener("submit", addExpense);
 resetButton.addEventListener("click", resetData);
 
-// Inicializa app
-if (config) {
-  updateSummary();
-  renderExpenses();
-}
+// Inicialização
+updateUI();
