@@ -1,42 +1,35 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 2rem;
-  background: #f4f4f4;
-  color: #333;
-}
-
-form {
-  margin-bottom: 1.5rem;
-  background: #fff;
+  font-family: sans-serif;
+  max-width: 600px;
+  margin: auto;
   padding: 1rem;
-  border-radius: 8px;
-}
-
-label {
-  display: block;
-  margin-top: 0.5rem;
-}
-
-input {
-  width: 100%;
-  padding: 0.4rem;
-  margin-top: 0.2rem;
-  margin-bottom: 0.8rem;
-}
-
-button {
-  padding: 0.6rem 1rem;
-  margin-top: 0.5rem;
-  cursor: pointer;
+  background: #f3f3f3;
 }
 
 section {
   margin-bottom: 2rem;
 }
 
-.summary pre {
-  background: #fff;
-  padding: 1rem;
-  white-space: pre-wrap;
-  border-radius: 8px;
+label, input, button {
+  display: block;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.summary p {
+  font-weight: bold;
 }
