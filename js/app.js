@@ -55,10 +55,10 @@ function renderExpenses() {
 }
 
 // Utilitários
-function getSunday(dateStr) {
+function getPreviousSunday(dateStr) {
   const date = new Date(dateStr);
-  const day = date.getDay();
-  date.setDate(date.getDate() + (7 - day));
+  const day = date.getDay(); // 0 (domingo) a 6 (sábado)
+  date.setDate(date.getDate() - day);
   return date.toISOString().split('T')[0];
 }
 
@@ -119,8 +119,9 @@ function updateDailyBalances() {
 // Renderizar resumo
 function renderSummary() {
   updateDailyBalances();
+
   const today = new Date().toISOString().split('T')[0];
-  const sunday = getSunday(today);
+  const sunday = getPreviousSunday(today);
   const lastDayOfMonth = getLastDayOfMonth(today);
 
   // Saldo do dia
@@ -128,8 +129,8 @@ function renderSummary() {
   const gastosHoje = getTotalExpenses(today);
   const saldoDia = saldoHoje - gastosHoje;
 
-  // Saldo da semana
-  const diasSemana = getDaysArray(today, sunday);
+  // Saldo da semana: do domingo anterior até hoje
+  const diasSemana = getDaysArray(sunday, today);
   let saldoSemana = 0;
   diasSemana.forEach(dateStr => {
     const saldoDiaX = parseFloat(localStorage.getItem('saldo_' + dateStr)) || dailyValue;
@@ -137,8 +138,9 @@ function renderSummary() {
     saldoSemana += saldoDiaX - gastos;
   });
 
-  // Saldo do mês
-  const diasMes = getDaysArray(today, lastDayOfMonth);
+  // Saldo do mês: do primeiro dia do mês até hoje
+  const firstDayOfMonth = lastDayOfMonth.slice(0, 8) + '01'; // YYYY-MM-01
+  const diasMes = getDaysArray(firstDayOfMonth, today);
   let saldoMes = 0;
   diasMes.forEach(dateStr => {
     const saldoDiaX = parseFloat(localStorage.getItem('saldo_' + dateStr)) || dailyValue;
