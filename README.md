@@ -35,10 +35,6 @@ Permitir ao usuário visualizar, de forma clara, o saldo acumulado de cada dia, 
 
 O app é leve, rápido e 100% web. Você pode compartilhar o link com outras pessoas — cada uma terá sua própria experiência de uso, sem interferência nos seus dados.
 
-### 🌐 Acesse o app agora:
-
-👉 [https://leaphar.github.io/saboia/](https://leaphar.github.io/saboia-finance-app)
-
 ---
 
 *Desenvolvido com foco em simplicidade, privacidade e autonomia financeira diária.*
