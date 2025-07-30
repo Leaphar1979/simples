@@ -7,35 +7,29 @@
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div class="container">
-    <h1>Sabóia - Controle Diário</h1>
-
+  <main>
     <section id="setup">
-      <label for="startDate">Data de início:</label>
+      <h1>Sabóia</h1>
+      <p>Informe o valor diário e a data de início:</p>
+      <input type="number" id="dailyAmount" placeholder="Valor diário (ex: 50)" />
       <input type="date" id="startDate" />
-
-      <label for="dailyAmount">Valor diário (R$):</label>
-      <input type="number" id="dailyAmount" />
-
       <button id="startButton">Iniciar</button>
     </section>
 
     <section id="appSection" class="hidden">
-      <div class="saldo">
-        <h2>Saldo do Dia</h2>
-        <p id="dailyBalance">R$ 0,00</p>
-      </div>
+      <h2>Saldo do Dia</h2>
+      <div id="balanceDisplay">R$ 0,00</div>
 
-      <div class="gastos">
-        <label for="expense">Adicionar gasto (R$):</label>
-        <input type="number" id="expense" />
-        <button id="addExpense">Registrar gasto</button>
-      </div>
+      <h3>Registrar Gasto</h3>
+      <input type="number" id="expense" placeholder="Valor do gasto" />
+      <button id="addExpense">Adicionar</button>
 
-      <button id="resetButton" class="reset">Resetar tudo</button>
+      <h3>Gastos do Dia</h3>
+      <ul id="expenseList"></ul>
+
+      <button id="resetButton" class="danger">Resetar Tudo</button>
     </section>
-  </div>
-
-  <script src="script.js"></script>
+  </main>
+  <script src="app.js"></script>
 </body>
 </html>
