@@ -15,8 +15,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const setupSection = document.getElementById("setup");
   const appSection = document.getElementById("appSection");
 
+  if (!window.localStorage) {
+    alert("Seu navegador não suporta armazenamento local. Tente outro navegador.");
+    return;
+  }
+
   function loadData() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null;
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null;
+    } catch {
+      return null;
+    }
   }
 
   function saveData(data) {
@@ -36,19 +45,12 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     let total = data.dailyAmount * (daysPassed + 1);
-
-    const spentToday = data.expenses
-      .filter((e) => e.date === today)
-      .reduce((acc, e) => acc + e.amount, 0);
-
     const allSpent = data.expenses.reduce((acc, e) => acc + e.amount, 0);
-
-    const balance = total - allSpent;
+    const expensesToday = data.expenses.filter((e) => e.date === today);
 
     return {
-      balance,
-      spentToday,
-      expensesToday: data.expenses.filter((e) => e.date === today),
+      balance: total - allSpent,
+      expensesToday,
     };
   }
 
@@ -108,8 +110,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   resetButton.addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
+    if (confirm("Tem certeza que deseja resetar todos os dados?")) {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
   });
 
   const existingData = loadData();
