@@ -1,92 +1,103 @@
-const startButton = document.getElementById("startButton");
-const addExpenseButton = document.getElementById("addExpense");
-const resetButton = document.getElementById("resetButton");
+document.addEventListener("DOMContentLoaded", () => {
+  const STORAGE_KEY = "saboyaAppData";
 
-const startDateInput = document.getElementById("startDate");
-const dailyAmountInput = document.getElementById("dailyAmount");
-const expenseInput = document.getElementById("expense");
-const dailyBalanceDisplay = document.getElementById("dailyBalance");
-const appSection = document.getElementById("appSection");
+  const startButton = document.getElementById("startButton");
+  const resetButton = document.getElementById("resetButton");
+  const addExpenseButton = document.getElementById("addExpense");
 
-function getTodayKey() {
-  const today = new Date();
-  today.setHours(today.getHours() - 3); // Ajuste UTC-3
-  return today.toISOString().split("T")[0];
-}
+  const startDateInput = document.getElementById("startDate");
+  const dailyAmountInput = document.getElementById("dailyAmount");
+  const expenseInput = document.getElementById("expense");
+  const dailyBalanceDisplay = document.getElementById("dailyBalance");
 
-function loadSettings() {
-  return {
-    startDate: localStorage.getItem("startDate"),
-    dailyAmount: parseFloat(localStorage.getItem("dailyAmount")) || 0,
-    lastDate: localStorage.getItem("lastDate"),
-    currentBalance: parseFloat(localStorage.getItem("currentBalance")) || 0
-  };
-}
+  const setupSection = document.getElementById("setup");
+  const appSection = document.getElementById("appSection");
 
-function saveSettings(settings) {
-  localStorage.setItem("startDate", settings.startDate);
-  localStorage.setItem("dailyAmount", settings.dailyAmount);
-  localStorage.setItem("lastDate", settings.lastDate);
-  localStorage.setItem("currentBalance", settings.currentBalance);
-}
-
-function addDailyAllowance(settings) {
-  const todayKey = getTodayKey();
-  if (settings.lastDate !== todayKey) {
-    settings.currentBalance += settings.dailyAmount;
-    settings.lastDate = todayKey;
-    saveSettings(settings);
-  }
-  return settings;
-}
-
-function updateDisplay(balance) {
-  dailyBalanceDisplay.textContent = `R$ ${balance.toFixed(2)}`;
-}
-
-function initApp() {
-  const settings = loadSettings();
-  if (!settings.startDate || !settings.dailyAmount) return;
-  addDailyAllowance(settings);
-  updateDisplay(settings.currentBalance);
-  appSection.classList.remove("hidden");
-}
-
-startButton.addEventListener("click", () => {
-  const startDate = startDateInput.value;
-  const dailyAmount = parseFloat(dailyAmountInput.value);
-
-  if (!startDate || isNaN(dailyAmount) || dailyAmount <= 0) {
-    alert("Por favor, informe uma data e um valor diário válido.");
-    return;
+  function formatCurrency(value) {
+    return value.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2
+    });
   }
 
-  const settings = {
-    startDate,
-    dailyAmount,
-    lastDate: "",
-    currentBalance: 0
-  };
-  saveSettings(settings);
-  initApp();
-});
+  function getTodayDate() {
+    const now = new Date();
+    now.setUTCHours(now.getUTCHours() - 3); // Ajuste UTC-3
+    return now.toISOString().split("T")[0];
+  }
 
-addExpenseButton.addEventListener("click", () => {
-  const expense = parseFloat(expenseInput.value);
-  if (isNaN(expense) || expense <= 0) return;
+  function loadAppData() {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return data || null;
+  }
 
-  const settings = loadSettings();
-  settings.currentBalance -= expense;
-  saveSettings(settings);
-  updateDisplay(settings.currentBalance);
-  expenseInput.value = "";
-});
+  function saveAppData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
 
-resetButton.addEventListener("click", () => {
-  if (confirm("Deseja realmente apagar todos os dados?")) {
-    localStorage.clear();
-    location.reload();
+  function resetApp() {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
+  }
+
+  function calculateTodayBalance(appData) {
+    const today = getTodayDate();
+    const startDate = new Date(appData.startDate);
+    const currentDate = new Date(today);
+    const daysElapsed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+    const totalCredit = appData.dailyAmount * (daysElapsed + 1);
+
+    const totalSpent = appData.expenses.reduce((sum, e) => sum + e.amount, 0);
+    return totalCredit - totalSpent;
+  }
+
+  function updateBalanceDisplay(appData) {
+    const balance = calculateTodayBalance(appData);
+    dailyBalanceDisplay.textContent = formatCurrency(balance);
+  }
+
+  function initApp(appData) {
+    setupSection.classList.add("hidden");
+    appSection.classList.remove("hidden");
+    updateBalanceDisplay(appData);
+  }
+
+  startButton.addEventListener("click", () => {
+    const startDate = startDateInput.value;
+    const dailyAmount = parseFloat(dailyAmountInput.value);
+
+    if (!startDate || isNaN(dailyAmount) || dailyAmount <= 0) {
+      alert("Preencha todos os campos corretamente.");
+      return;
+    }
+
+    const appData = {
+      startDate,
+      dailyAmount,
+      expenses: []
+    };
+
+    saveAppData(appData);
+    initApp(appData);
+  });
+
+  addExpenseButton.addEventListener("click", () => {
+    const appData = loadAppData();
+    const amount = parseFloat(expenseInput.value);
+    if (isNaN(amount) || amount <= 0) return;
+
+    const today = getTodayDate();
+    appData.expenses.push({ date: today, amount });
+    saveAppData(appData);
+    expenseInput.value = "";
+    updateBalanceDisplay(appData);
+  });
+
+  resetButton.addEventListener("click", resetApp);
+
+  const existingData = loadAppData();
+  if (existingData) {
+    initApp(existingData);
   }
 });
-
-initApp();
