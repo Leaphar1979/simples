@@ -37,7 +37,7 @@ O app é leve, rápido e 100% web. Você pode compartilhar o link com outras pes
 
 ### 🌐 Acesse o app agora:
 
-👉 [https://leaphar.github.io/saboia/](https://leaphar.github.io/saboia-finance-app/)
+👉 [https://leaphar.github.io/saboia/](https://leaphar.github.io/saboia-finance-app)
 
 ---
 
