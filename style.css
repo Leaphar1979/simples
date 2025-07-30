@@ -1,41 +1,74 @@
 body {
-  font-family: sans-serif;
-  max-width: 600px;
-  margin: auto;
-  padding: 1rem;
-  background: #f3f3f3;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f4f9;
+  margin: 0;
+  padding: 0;
+  color: #333;
 }
 
-section {
-  margin-bottom: 2rem;
+.container {
+  max-width: 400px;
+  margin: 50px auto;
   background: #fff;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-label, input, button {
+h1 {
+  text-align: center;
+  color: #4a90e2;
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  margin-bottom: 1.2rem;
+}
+
+label {
   display: block;
-  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+input[type="number"],
+input[type="date"] {
   width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
 }
 
 button {
-  margin-top: 1rem;
-  padding: 0.5rem;
-  background: #4CAF50;
+  padding: 0.6rem 1rem;
+  background-color: #4a90e2;
   color: white;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 4px;
-}
-
-ul {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-.summary p {
   font-weight: bold;
-  margin: 0.3rem 0;
+  margin-top: 0.5rem;
+}
+
+button:hover {
+  background-color: #357abd;
+}
+
+.reset {
+  background-color: #e94e4e;
+  margin-top: 1rem;
+}
+
+.reset:hover {
+  background-color: #c0392b;
+}
+
+.hidden {
+  display: none;
+}
+
+#dailyBalance {
+  color: #27ae60;
+  font-weight: bold;
 }
