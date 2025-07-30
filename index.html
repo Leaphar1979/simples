@@ -2,42 +2,40 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sabóia - Controle Diário</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <div class="container">
-    <h1>Sabóia</h1>
+    <h1>Sabóia - Controle Diário</h1>
 
-    <div id="setup">
-      <div class="input-group">
-        <label for="startDate">Data de Início</label>
-        <input type="date" id="startDate" />
-      </div>
-      <div class="input-group">
-        <label for="dailyAmount">Valor Diário (R$)</label>
-        <input type="number" id="dailyAmount" />
-      </div>
-      <button id="startButton">Iniciar Controle</button>
-    </div>
+    <section id="setup">
+      <label for="startDate">Data de início:</label>
+      <input type="date" id="startDate" />
 
-    <div id="appSection" class="hidden">
-      <div class="input-group">
-        <label for="expense">Gasto de Hoje (R$)</label>
+      <label for="dailyAmount">Valor diário (R$):</label>
+      <input type="number" id="dailyAmount" />
+
+      <button id="startButton">Iniciar</button>
+    </section>
+
+    <section id="appSection" class="hidden">
+      <div class="saldo">
+        <h2>Saldo do Dia</h2>
+        <p id="dailyBalance">R$ 0,00</p>
+      </div>
+
+      <div class="gastos">
+        <label for="expense">Adicionar gasto (R$):</label>
         <input type="number" id="expense" />
-        <button id="addExpense">Adicionar Gasto</button>
+        <button id="addExpense">Registrar gasto</button>
       </div>
 
-      <div class="input-group">
-        <label>Saldo do Dia</label>
-        <div id="dailyBalance">R$ 0,00</div>
-      </div>
-
-      <button class="reset" id="resetButton">Resetar Dados</button>
-    </div>
+      <button id="resetButton" class="reset">Resetar tudo</button>
+    </section>
   </div>
 
-  <script src="app.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
