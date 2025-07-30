@@ -8,17 +8,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const startDateInput = document.getElementById("startDate");
   const dailyAmountInput = document.getElementById("dailyAmount");
   const expenseInput = document.getElementById("expense");
-  const dailyBalanceDisplay = document.getElementById("dailyBalance");
+
+  const balanceDisplay = document.getElementById("balanceDisplay");
+  const expenseList = document.getElementById("expenseList");
 
   const setupSection = document.getElementById("setup");
   const appSection = document.getElementById("appSection");
 
-  function formatCurrency(value) {
-    return value.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      minimumFractionDigits: 2
-    });
+  function loadData() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null;
+  }
+
+  function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
   function getTodayDate() {
@@ -27,40 +29,51 @@ document.addEventListener("DOMContentLoaded", () => {
     return now.toISOString().split("T")[0];
   }
 
-  function loadAppData() {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return data || null;
-  }
-
-  function saveAppData(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
-
-  function resetApp() {
-    localStorage.removeItem(STORAGE_KEY);
-    window.location.reload();
-  }
-
-  function calculateTodayBalance(appData) {
+  function calculateBalance(data) {
     const today = getTodayDate();
-    const startDate = new Date(appData.startDate);
-    const currentDate = new Date(today);
-    const daysElapsed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
-    const totalCredit = appData.dailyAmount * (daysElapsed + 1);
+    const daysPassed = Math.floor(
+      (new Date(today) - new Date(data.startDate)) / (1000 * 60 * 60 * 24)
+    );
 
-    const totalSpent = appData.expenses.reduce((sum, e) => sum + e.amount, 0);
-    return totalCredit - totalSpent;
+    let total = data.dailyAmount * (daysPassed + 1);
+
+    const spentToday = data.expenses
+      .filter((e) => e.date === today)
+      .reduce((acc, e) => acc + e.amount, 0);
+
+    const allSpent = data.expenses.reduce((acc, e) => acc + e.amount, 0);
+
+    const balance = total - allSpent;
+
+    return {
+      balance,
+      spentToday,
+      expensesToday: data.expenses.filter((e) => e.date === today),
+    };
   }
 
-  function updateBalanceDisplay(appData) {
-    const balance = calculateTodayBalance(appData);
-    dailyBalanceDisplay.textContent = formatCurrency(balance);
+  function updateDisplay(data) {
+    const { balance, expensesToday } = calculateBalance(data);
+    balanceDisplay.textContent = balance.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+
+    expenseList.innerHTML = "";
+    expensesToday.forEach((e) => {
+      const li = document.createElement("li");
+      li.textContent = `- ${e.amount.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      })}`;
+      expenseList.appendChild(li);
+    });
   }
 
-  function initApp(appData) {
+  function initApp(data) {
     setupSection.classList.add("hidden");
     appSection.classList.remove("hidden");
-    updateBalanceDisplay(appData);
+    updateDisplay(data);
   }
 
   startButton.addEventListener("click", () => {
@@ -68,35 +81,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const dailyAmount = parseFloat(dailyAmountInput.value);
 
     if (!startDate || isNaN(dailyAmount) || dailyAmount <= 0) {
-      alert("Preencha todos os campos corretamente.");
+      alert("Preencha corretamente os campos.");
       return;
     }
 
-    const appData = {
+    const data = {
       startDate,
       dailyAmount,
-      expenses: []
+      expenses: [],
     };
 
-    saveAppData(appData);
-    initApp(appData);
+    saveData(data);
+    initApp(data);
   });
 
   addExpenseButton.addEventListener("click", () => {
-    const appData = loadAppData();
+    const data = loadData();
     const amount = parseFloat(expenseInput.value);
-    if (isNaN(amount) || amount <= 0) return;
+    if (!data || isNaN(amount) || amount <= 0) return;
 
     const today = getTodayDate();
-    appData.expenses.push({ date: today, amount });
-    saveAppData(appData);
+    data.expenses.push({ date: today, amount });
+    saveData(data);
     expenseInput.value = "";
-    updateBalanceDisplay(appData);
+    updateDisplay(data);
   });
 
-  resetButton.addEventListener("click", resetApp);
+  resetButton.addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  });
 
-  const existingData = loadAppData();
+  const existingData = loadData();
   if (existingData) {
     initApp(existingData);
   }
