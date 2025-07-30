@@ -3,54 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sabóia - Controle Financeiro Diário</title>
+  <title>Sabóia - Controle Diário</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 </head>
 <body>
-  <h1>Sabóia</h1>
-  <h2>Controle Financeiro Diário</h2>
+  <div class="container">
+    <h1>Sabóia</h1>
 
-  <section>
-    <form id="config-form">
-      <label for="daily-value">Valor diário (R$):</label>
-      <input type="number" id="daily-value" step="0.01" required />
+    <div id="setup">
+      <div class="input-group">
+        <label for="startDate">Data de Início</label>
+        <input type="date" id="startDate" />
+      </div>
+      <div class="input-group">
+        <label for="dailyAmount">Valor Diário (R$)</label>
+        <input type="number" id="dailyAmount" />
+      </div>
+      <button id="startButton">Iniciar Controle</button>
+    </div>
 
-      <label for="start-date">Data de início:</label>
-      <input type="date" id="start-date" required />
+    <div id="appSection" class="hidden">
+      <div class="input-group">
+        <label for="expense">Gasto de Hoje (R$)</label>
+        <input type="number" id="expense" />
+        <button id="addExpense">Adicionar Gasto</button>
+      </div>
 
-      <button type="submit">Salvar configurações</button>
-    </form>
-  </section>
+      <div class="input-group">
+        <label>Saldo do Dia</label>
+        <div id="dailyBalance">R$ 0,00</div>
+      </div>
 
-  <section>
-    <form id="expense-form">
-      <label for="expense-date">Data:</label>
-      <input type="date" id="expense-date" required />
+      <button class="reset" id="resetButton">Resetar Dados</button>
+    </div>
+  </div>
 
-      <label for="expense-amount">Valor gasto (R$):</label>
-      <input type="number" id="expense-amount" step="0.01" required />
-
-      <label for="expense-description">Descrição:</label>
-      <input type="text" id="expense-description" placeholder="Ex: Café, Uber" required />
-
-      <button type="submit">Adicionar gasto</button>
-    </form>
-  </section>
-
-  <section>
-    <h3>Gastos registrados</h3>
-    <ul id="expenses-list"></ul>
-    <button id="reset-button">Resetar dados</button>
-  </section>
-
-  <section class="summary">
-    <h3>Resumo</h3>
-    <p id="daily-balance">Saldo do dia:</p>
-    <p id="weekly-balance">Saldo da semana:</p>
-    <p id="monthly-balance">Saldo do mês:</p>
-  </section>
-
-  <script src="js/app.js" defer></script>
+  <script src="app.js"></script>
 </body>
 </html>
