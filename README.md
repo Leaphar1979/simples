@@ -35,6 +35,32 @@ Permitir ao usuário visualizar, de forma clara, o saldo acumulado de cada dia, 
 
 O app é leve, rápido e 100% web. Você pode compartilhar o link com outras pessoas — cada uma terá sua própria experiência de uso, sem interferência nos seus dados.
 
+## 🔗 Acesse o App
+
+Você pode utilizar o Simple$ diretamente pelo navegador, sem instalar nada:
+
+👉 [https://leaphar1979.github.io/simples](https://leaphar1979.github.io/simples)
+
+Funciona perfeitamente em celulares e computadores, e pode ser adicionado à tela inicial como um app.
+
+## 📬 Contato
+
+Sugestões, feedbacks ou dúvidas?  
+Fale diretamente comigo no Telegram: [@Leapharr](https://t.me/Leapharr)
+
+---
+
+## 🛡️ Licença
+
+Este projeto está licenciado sob a Creative Commons **BY-NC-ND 4.0**.  
+Ou seja, você pode usá-lo e compartilhá-lo livremente, mas:
+
+- **Não pode usar comercialmente**
+- **Não pode alterar ou redistribuir versões modificadas**
+- **Deve sempre creditar o autor original**
+
+[Leia a licença completa aqui](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
 ---
 
 *Desenvolvido com foco em simplicidade, privacidade e autonomia financeira diária.*
