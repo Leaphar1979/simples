@@ -54,8 +54,11 @@ button.danger:hover {
   font-size: 2rem;
   font-weight: bold;
   margin-top: 1rem;
-  color: #28a745;
 }
+
+/* NOVAS CLASSES DE COR */
+.balance-positive { color: #28a745; } /* verde */
+.balance-negative { color: #dc3545; } /* vermelho */
 
 ul {
   list-style-type: none;
