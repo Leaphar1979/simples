@@ -30,11 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function calculateBalance(data) {
-    const today = getTodayDate();
-
     const expensesToday = data.expenses.reduce((sum, e) => sum + e.amount, 0);
     const balance = data.lastBalance + data.dailyAmount - expensesToday;
-
     return balance;
   }
 
@@ -84,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function checkNewDay(data) {
     const today = getTodayDate();
     if (data.currentDate !== today) {
-      const yesterdayBalance = calculateBalance(data); // Salva o saldo do dia anterior
+      const yesterdayBalance = calculateBalance(data);
       data.lastBalance = yesterdayBalance;
       data.currentDate = today;
       data.expenses = [];
@@ -100,6 +97,10 @@ document.addEventListener("DOMContentLoaded", () => {
       style: "currency",
       currency: "BRL"
     });
+
+    // Definir cor: verde se >= 0, vermelho se < 0
+    balanceDisplay.classList.toggle("balance-negative", balance < 0);
+    balanceDisplay.classList.toggle("balance-positive", balance >= 0);
 
     updateExpenseList(data);
   }
